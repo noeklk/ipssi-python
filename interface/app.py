@@ -1,12 +1,16 @@
-from flask import Flask, render_template, request, session, redirect, url_for
-from static.helper.casino_helper import serve_amount_from_deck, get_deck, loop_deck_removal, deuxieme_tirage, check_best_hand
-from static.config import hostname
 import secrets
+
+from flask import Flask, redirect, render_template, request, session, url_for
+
+from .static.config import hostname
+from .static.helper.casino_helper import (check_best_hand,
+                                                   deuxieme_tirage, get_deck,
+                                                   loop_deck_removal,
+                                                   serve_amount_from_deck)
 
 SECRET_KEY = secrets.token_urlsafe(16)
 
 app = Flask(__name__)
-# app.secret_key = SECRET_KEY
 app.config['SECRET_KEY'] = SECRET_KEY
 
 def set_bankroll(bankroll: int):
