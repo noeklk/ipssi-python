@@ -173,12 +173,14 @@ def bank_roll(bank):
         if bet > bank:
             bet = int(input("La somme renseigné est supérieur à votre banque, veuillez entrer une mise convenable\n"))
         else:
+            return bet
             break
-
+    
 def machine():
     bank = 50
     while True:
-        bank_roll(bank)
+        bet = bank_roll(bank)
+        bank -= bet
         draw = serve_amount_from_deck(deck, 5)
         print(f"Premier tirage: {draw}\n")
         chosen_cards = choix_carte(draw)
@@ -186,7 +188,8 @@ def machine():
         print(f"Deuxième tirage: {second_draw}\n")
 
         mult_mise, hand_result = check_best_hand(second_draw)
-        bank *= mult_mise
+
+        bank += (bet * mult_mise)
 
         print(f"Vous avez eu une : {hand_result}\n")
         reset_deck()
