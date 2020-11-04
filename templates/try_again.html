@@ -1,0 +1,51 @@
+{% extends "base.html" %} {% block head %} {{ super() }}
+<style></style>
+{% endblock %} {% block content %}
+<div class="container">
+	<div class="p-3 mb-2 bg-dark text-white">
+		<form action="{{hostname}}/try_again_bank_handler" method="POST">
+			<div class="form-group">
+				<label for="bankroll-input">Votre banque</label>
+				<input
+					id="bankroll"
+					type="number"
+					min="10"
+					name="bankroll"
+					class="form-control"
+					placeholder="Banque"
+					disabled
+					value="{{bankroll}}"
+				/>
+			</div>
+			<div class="form-group">
+				<label for="bet-input">Insérer votre mise</label>
+
+				<input
+					id="bet-input"
+					type="number"
+					min="2"
+					max="{{bankroll}}"
+					name="bet"
+					class="form-control"
+					placeholder="Votre mise"
+					value="2"
+				/>
+			</div>
+
+			<input
+				id="play"
+				type="submit"
+				class="btn btn-primary"
+				value="Jouer"
+				style="width: 100%"
+			/>
+		</form>
+	</div>
+	{% if error_message %}
+	<div class="alert alert-danger" role="alert" style="text-align: center">
+		{{error_message}}
+	</div>
+	{% endif %}
+</div>
+
+{% endblock %}

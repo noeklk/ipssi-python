@@ -1,190 +1,102 @@
-import random
-import sys
-from collections import defaultdict
+from flask import Flask, render_template, request, session, redirect, url_for
+from static.helper.casino_helper import serve_amount_from_deck, get_deck, loop_deck_removal, deuxieme_tirage, check_best_hand
+from static.config import hostname
+import secrets
 
-deck = ['2-h','3-h','4-h','5-h','6-h','7-h','8-h','9-h','10-h','J-h','Q-h','K-h','A-h','2-d','3-d','4-d','5-d','6-d','7-d','8-d','9-d','10-d','J-d','Q-d','K-d','A-d','2-c','3-c','4-c','5-c','6-c','7-c','8-c','9-c','10-c','J-c','Q-c','K-c','A-c','2-s','3-s','4-s','5-s','6-s','7-s','8-s','9-s','10-s','J-s','Q-s','K-s','A-s']
-card_order_dict = ["2", "3", "4", "5", "6", "7", "8", "9", "10", "J" ,"Q", "K", "A"]
+SECRET_KEY = secrets.token_urlsafe(16)
 
-def serve_amount_from_deck(deck: list, amount: int = 5):
-    tirage = random.sample(deck, amount)
+app = Flask(__name__)
+# app.secret_key = SECRET_KEY
+app.config['SECRET_KEY'] = SECRET_KEY
 
-    for x in tirage:
-        deck.remove(x)
+def set_bankroll(bankroll: int):
+    session['bankroll'] = bankroll
+def get_bankroll():
+    return session['bankroll']
+
+def set_bet(bet: int):
+    session['bet'] = bet
+def get_bet():
+    return session['bet']
+
+def reset():
+    set_bankroll(0)
+    set_bet(0)
+
+@app.route('/')
+@app.route('/start/<error_message>')
+def view_start(error_message = None):
+    reset()
+
+    return render_template('play.html', hostname = hostname, error_message = error_message)
+
+@app.route('/try_again', defaults={'error_message': None}, methods=['POST', 'GET'])
+@app.route('/try_again/<error_message>', methods=['POST', 'GET'])
+def view_try_again(error_message = None):
+    return render_template('try_again.html', hostname = hostname, error_message = error_message, bankroll = get_bankroll())
+
+@app.route('/bank_handler', methods=['POST', 'GET'])
+def bank_handler():
+    bankroll = int(request.form['bankroll'])
+    bet = int(request.form['bet'])
+
+    print(bankroll, bet)
+
+    if bet > bankroll:
+        if not bankroll:
+            bankroll = get_bankroll()
+            return redirect(url_for('try_again', error_message = "Montant parié supérieur à votre banque, veuillez saisir un montant inférieur à votre banque"))
     
-    return tirage
+        return redirect(url_for('view_start', error_message = "Montant parié supérieur à votre banque, veuillez saisir un montant inférieur à votre banque"))
     
+    set_bankroll(bankroll - bet)
+    set_bet(bet)
 
-def choix_carte(card_draw: list):
-    new_card_draw = []
+    return redirect(url_for('show_starting_hand_page'))
 
-    for x in card_draw:
-        keeps_card = input(f"Voulez vous gardez votre carte : [{x}] y/n\n")
+@app.route('/try_again_bank_handler', methods=['POST', 'GET'])
+def try_again_bank_handler():
+    bankroll = get_bankroll()
+    bet = int(request.form['bet'])
 
-        if keeps_card.lower() == "y":
-            new_card_draw.append(x)
-        elif keeps_card.lower() == "n":
-            pass
-        else:
-            return "input error"
+    print(bankroll, bet)
 
-    return new_card_draw
+    if bet > bankroll:
 
-def deuxieme_tirage(chosen_cards: list, deck: list):
-    if len(chosen_cards) == 5:
-        return chosen_cards
+        return redirect(url_for('view_try_again', error_message = "Montant parié supérieur à votre banque, veuillez saisir un montant inférieur à votre banque"))
+       
+    set_bankroll(bankroll - bet)
+    set_bet(bet)
 
-    new_cards_amount = 5 - len(chosen_cards)
-    chosen_cards.extend(serve_amount_from_deck(deck, new_cards_amount))
+    return redirect(url_for('show_starting_hand_page'))
 
-    return chosen_cards
+@app.route('/starting_hand')
+def show_starting_hand_page():
+    return render_template('starting_hand.html', hostname = hostname, starting_hand = serve_amount_from_deck(get_deck()), bet = get_bet(), bankroll = get_bankroll())
 
-def deconstruct_draw(draw):
-  rank_array = [h.split("-")[0] for h in draw]
-  color_array = [h.split("-")[1] for h in draw]
+@app.route('/final_hand', methods=['POST', 'GET'])
+def show_final_hand_page():
+    starting_hand = request.form['cards']
+    starting_hand_list = starting_hand.split(";")
+    deck = loop_deck_removal(starting_hand_list)
 
-  return rank_array, color_array
+    chosen_cards = []
 
+    for i in starting_hand_list:
+        card = request.form[f'decision_{i}']
+        if "keep_" in card:
+            chosen_cards.append(card.split("keep_")[1])
 
-def check_flush(draw):
-    rank_array, color_array = deconstruct_draw(draw)
+    final_hand = deuxieme_tirage(chosen_cards, deck)
 
-    if len(set(color_array)) == 1:
-      return True
+    mult, result = check_best_hand(final_hand)
 
-    return False
+    bet_result = mult * get_bet()
+    set_bankroll(get_bankroll() + bet_result)
 
-def check_straight(draw):
-  rank_array, color_array = deconstruct_draw(draw)
+    return render_template('final_hand.html', final_hand = final_hand, mult = mult, result = result, bankroll = get_bankroll(), bet_result = bet_result)
 
-  if sorted(rank_array) == ['2', '3', '4', '5', 'A']:
-    return True
-
-  for i in range(9):
-    if sorted(rank_array) == sorted(card_order_dict[i:5+i]):
-      return True
-  
-  return False
-
-def check_royal_flush(draw):
-  rank_array, color_array = deconstruct_draw(draw)
-
-  if check_flush(draw) == True and sorted(rank_array) == ['10', 'A', 'J', 'K', 'Q']:
-    return True
-  
-  return False
-
-def check_straight_flush(draw):
-  rank_array, color_array = deconstruct_draw(draw)
-
-  if check_flush(draw) == True and check_straight(draw) == True:
-    return True
-
-  return False
-
-def check_four_of_a_kind(draw):
-  rank_array, color_array = deconstruct_draw(draw)
-  value_counts = defaultdict(lambda:0)
-
-  for i in rank_array:
-    value_counts[i]+=1
-
-  if sorted(value_counts.values()) == [1,4]:
-    return True
-  return False
-
-def check_full_house(draw):
-  rank_array, color_array = deconstruct_draw(draw)
-  value_counts = defaultdict(lambda:0)
-
-  for v in rank_array:
-        value_counts[v]+=1
-
-  if sorted(value_counts.values()) == [2,3]:
-    return True
-  return False
-
-def check_three_of_a_kind(draw):
-  rank_array, color_array = deconstruct_draw(draw)
-  value_counts = defaultdict(lambda:0)
-
-  for i in rank_array:
-    value_counts[i]+=1
-
-  if set(value_counts.values()) == set([3, 1]):
-    return True
-  return False
-
-def check_two_pairs(draw):
-  rank_array, color_array = deconstruct_draw(draw)
-  value_counts = defaultdict(lambda:0)
-
-  for v in rank_array:
-        value_counts[v]+=1
-
-  if sorted(value_counts.values()) == [1,2,2]:
-    return True
-  return False
-
-def check_one_pair(draw):
-  rank_array, color_array = deconstruct_draw(draw)
-  value_counts = defaultdict(lambda:0)
-
-  for v in rank_array:
-        value_counts[v]+=1
-
-  if sorted(value_counts.values()) == [1,1,1,2]:
-    return True
-  return False
-
-def check_best_hand(draw):
-  if check_royal_flush(draw):
-    return 250, "Quinte Flush Royale"
-  elif check_straight_flush(draw):
-    return 50, "Quinte Flush"
-  elif check_four_of_a_kind(draw):
-    return 25, "Carré"
-  elif check_full_house(draw):
-    return 9, "Full House"
-  elif check_flush(draw):
-    return 6, "Flush"
-  elif check_straight(draw):
-    return 4, "Quinte"
-  elif check_three_of_a_kind(draw):
-    return 3, "Brelan"
-  elif check_two_pairs(draw):
-    return 2, "Double Paire"
-  elif check_one_pair(draw):
-    return 1, "Paire"
-
-  return 0, "Rien"
-
-def bank_roll(bank):
-    print(f"Le montant de votre banque se situe à: {bank}€\n")
-    if bank <= 0:
-        print("Vous n'avez plus de sous, byebye\n")
-        sys.exit()
-
-    bet = int(input("Veuillez entrer votre mise\n"))
-    while True:
-        if bet > bank:
-            bet = int(input("La somme renseigné est supérieur à votre banque, veuillez entrer une mise convenable\n"))
-        else:
-            break
-
-
-def machine():
-    bank = 50
-    while True:
-        bank_roll(bank)
-        draw = serve_amount_from_deck(deck, 5)
-        print(f"Premier tirage: {draw}\n")
-        chosen_cards = choix_carte(draw)
-        second_draw = deuxieme_tirage(chosen_cards, deck)
-        print(f"Deuxième tirage: {second_draw}\n")
-
-        mult_mise, hand_result = check_best_hand(second_draw)
-        bank *= mult_mise
-
-        print(f"Vous avez eu une : {hand_result}\n")
-
-machine()
+@app.route('/reset', methods=['POST', 'GET'])
+def redirect_start():
+    reset()
+    return redirect(url_for('view_start'))

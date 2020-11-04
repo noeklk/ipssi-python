@@ -1,0 +1,85 @@
+{% extends "base.html" %} {% block head %} {{ super() }}
+<style>
+	.container-fluid {
+		display: flex;
+		flex-direction: row;
+		justify-content: center;
+	}
+	table,
+	th,
+	th,
+	td {
+		border: 1px solid black;
+	}
+	table {
+		margin: 0 auto 0 auto;
+	}
+</style>
+{% endblock %} {% block content %}
+<div class="container-fluid">
+	<table class="table table-dark">
+		<thead>
+			<tr>
+				<th colspan="5" style="text-align: center">
+					<h3>Main finale</h3>
+				</th>
+			</tr>
+		</thead>
+		<tbody>
+			<tr>
+				{% for card in final_hand %}
+				<td>
+					<img
+						src="static/images/card-game/{{card}}.png"
+						alt="{{card}}"
+						width="100%"
+					/>
+				</td>
+				{% endfor %}
+			</tr>
+
+			<tr>
+				<td colspan="5">
+					<h4 style="text-align: center">
+						Vous avez eu : {{result}}, vous récupérez {{ bet_result }}€
+					</h4>
+				</td>
+			</tr>
+			<tr>
+				<td colspan="5">
+					<h4 style="text-align: center">
+						Le montant de votre banque s'élève à {{ bankroll }}€
+					</h4>
+				</td>
+			</tr>
+
+			<tr>
+				<td colspan="5">
+					{% if bankroll > 0 %}
+					<form action="{{hostname}}/try_again" method="POST">
+						<input
+							type="submit"
+							class="btn btn-primary"
+							value="Recommencer"
+							style="width: 100%"
+						/>
+					</form>
+					{% else %}
+					<form action="{{hostname}}/reset" method="POST">
+						<input
+							type="submit"
+							class="btn btn-primary"
+							value="Entrer un autre billet"
+							style="width: 100%"
+						/>
+					</form>
+					{% endif %}
+				</td>
+			</tr>
+		</tbody>
+	</table>
+</div>
+<!-- <h2>Quelle carte voulez vous garder dans votre main ?</h2> -->
+{% endblock %} {% block script %}
+<script></script>
+{% endblock %}
