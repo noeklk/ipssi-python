@@ -13,6 +13,9 @@ SECRET_KEY = secrets.token_urlsafe(16)
 app = Flask(__name__)
 app.config['SECRET_KEY'] = SECRET_KEY
 
+# if __name__ == "__main__":
+#     app.run()
+
 def set_bankroll(bankroll: int):
     session['bankroll'] = bankroll
 def get_bankroll():
