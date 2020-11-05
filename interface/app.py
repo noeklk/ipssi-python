@@ -2,8 +2,8 @@ import secrets
 
 from flask import Flask, redirect, render_template, request, session, url_for
 
-from .static.config import hostname
-from .static.helper.casino_helper import (check_best_hand,
+from static.config import hostname
+from static.helper.casino_helper import (check_best_hand,
                                                    deuxieme_tirage, get_deck,
                                                    loop_deck_removal,
                                                    serve_amount_from_deck)
@@ -47,10 +47,6 @@ def bank_handler():
     print(bankroll, bet)
 
     if bet > bankroll:
-        if not bankroll:
-            bankroll = get_bankroll()
-            return redirect(url_for('try_again', error_message = "Montant parié supérieur à votre banque, veuillez saisir un montant inférieur à votre banque"))
-    
         return redirect(url_for('view_start', error_message = "Montant parié supérieur à votre banque, veuillez saisir un montant inférieur à votre banque"))
     
     set_bankroll(bankroll - bet)
@@ -66,7 +62,6 @@ def try_again_bank_handler():
     print(bankroll, bet)
 
     if bet > bankroll:
-
         return redirect(url_for('view_try_again', error_message = "Montant parié supérieur à votre banque, veuillez saisir un montant inférieur à votre banque"))
        
     set_bankroll(bankroll - bet)
