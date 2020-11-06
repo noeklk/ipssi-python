@@ -1,8 +1,16 @@
 {% extends "base.html" %} {% block head %} {{ super() }}
 <style></style>
 {% endblock %} {% block content %}
-<div class="container-fluid">
-	<div class="p-3 mb-2 bg-dark text-white">
+<div
+	style="
+		width: 100%;
+		height: 100%;
+		display: flex;
+		justify-content: center;
+		align-items: center;
+	"
+>
+	<div class="p-3 mb-2 bg-dark text-white" style="width: 50%">
 		<form action="{{hostname}}/bank_handler" method="POST">
 			<div class="form-group">
 				<label for="bankroll-input">Insérer un billet</label>
@@ -30,13 +38,7 @@
 				/>
 			</div>
 
-			<input
-				id="play"
-				type="submit"
-				class="btn btn-primary"
-				value="Jouer"
-				style="width: 100%"
-			/>
+			<input id="play" type="submit" class="btn btn-primary" value="Jouer" />
 		</form>
 	</div>
 	{% if error_message %}
