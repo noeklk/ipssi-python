@@ -49,12 +49,12 @@ def second_draw(chosen_cards: list, deck: list):
     return chosen_cards
 
 def bank_roll(bank):
-    print(f"Le montant de votre banque se situe à: {bank}€\n")
+    print(f"Le montant de votre banque se s'élève à: {bank}€")
     if bank <= 0:
         print("Vous n'avez plus de sous, byebye\n")
         sys.exit()
 
-    bet = int(input("Veuillez entrer votre mise\n"))
+    bet = int(input("Veuillez entrer votre mise : "))
     while True:
         if bet > bank:
             bet = int(input("La somme renseigné est supérieur à votre banque, veuillez entrer une mise convenable\n"))
@@ -63,7 +63,7 @@ def bank_roll(bank):
             break
     
 def main():
-    bank = 50
+    bank = int(input("Veuillez insérer un billet : "))
     while True:
         bet = bank_roll(bank)
         bank -= bet
@@ -77,7 +77,7 @@ def main():
 
         bank += (bet * mult_mise)
 
-        print(f"Vous avez eu une : {hand_result}\n")
+        print(f"Vous avez eu : {hand_result}\n")
         reset_deck()
 
 main()
