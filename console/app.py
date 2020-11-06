@@ -22,14 +22,20 @@ def card_choice(card_draw: list):
     new_card_draw = []
 
     for x in card_draw:
-        keeps_card = input(f"Voulez vous gardez votre carte : [{x}] y/n\n")
+        input_message = f"Voulez vous gardez votre carte : [{x}] y/n\n"
+        keeps_card = input(input_message)
 
-        if keeps_card.lower() == "y":
-            new_card_draw.append(x)
-        elif keeps_card.lower() == "n":
-            pass
-        else:
-            return "input error"
+        while True:
+            if keeps_card.lower() == "y":
+                new_card_draw.append(x)
+                break
+            elif keeps_card.lower() == "n":
+                break
+            else:
+                print("Erreur: veuillez renseignez y ou n")
+                keeps_card = input(input_message)
+
+        pass
 
     return new_card_draw
 
