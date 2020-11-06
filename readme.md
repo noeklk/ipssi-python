@@ -6,6 +6,11 @@
 ## 2 Initialisez votre environnement virtuel
 `py -m venv ./venv`
 
+## 3 Démarrez votre environnement virtuel
+`.\venv\Scripts\Activate.ps1` (PowerShell)
+`.\venv\Scripts\Activate.bat` (CMD ou autre)
+`source ./venv/bin/activate` (MAC)
+
 ## 3 Installez les dépendances du projet
 `pip install -r requirements.txt`
 
